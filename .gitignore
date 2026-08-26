@@ -1,0 +1,63 @@
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# ==================== 环境变量 / 密钥（绝不能提交）====================
+.env
+.env.local
+*.env
+*.pem
+*.key
+*.crt
+secrets/
+
+# ==================== IDE / 编辑器 ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==================== 日志 ====================
+*.log
+logs/
+
+# ==================== K8s / 容器本地文件 ====================
+kubeconfig
+*.kubeconfig
+.kube/
+*.tar
+*.tar.gz
+
+# ==================== 测试 / 临时 ====================
+test_data/
+tmp/
+.cache/
+.coverage
+htmlcov/
+
+# ==================== Grafana / 监控导出（可选，体积大）====================
+# 如果你后面用 docker-compose 起 grafana，会产生 volume 数据
+# 但导出的 dashboard JSON 应该提交，取消下一行注释即可
+# !dashboards/
+
+# ==================== 压测产物 ====================
+ab_results.txt
+wrk_results.txt
+locust_report.html
+
+# ==================== 其他 ====================
