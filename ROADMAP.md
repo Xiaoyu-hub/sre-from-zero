@@ -7,7 +7,7 @@
 
 ## 一、十日计划
 
-### Day 1 — Docker 入门
+### Day 1 — Docker 入门（√）
 - 任务：学 Docker 基础，写 Dockerfile 跑通 hello world
 - 产出：本地能运行 `docker run` 一个简单的 Python 镜像
 - 关键命令：
@@ -15,7 +15,7 @@
   - `docker run -it --rm python:3.11-slim python -c "print('hello')"`
 - 自检：能否在 30 分钟内把一个 FastAPI hello world 容器化跑起来
 
-### Day 2 — k3d/kubectl 入门
+### Day 2 — k3d/kubectl 入门（√）
 - 任务：本地起 k3d 集群，部署一个 nginx 验证能跑
 - 产出：本地 K8s 集群，kubectl get pods 能看到 nginx
 - 关键命令：
