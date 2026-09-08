@@ -25,7 +25,7 @@
   - `kubectl expose deployment nginx --port=80 --type=NodePort`
 - 自检：能用 `curl <node-ip>:<port>` 访问到 nginx
 
-### Day 3 — FastAPI 短链服务
+### Day 3 — FastAPI 短链服务(√)
 - 任务：用 FastAPI 实现 URL 短链核心逻辑
   - `POST /shorten`：传入长 URL，生成短码，存到内存 dict 或 Redis
   - `GET /{short_code}`：301/302 跳转到原 URL

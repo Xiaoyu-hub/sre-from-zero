@@ -27,7 +27,10 @@ def base62_encode(n: int) -> str:
 
 def generate_code() -> str:
     """UUID 的 128 位整数做 base62 编码，取前 8 位当短码。"""
-    return base62_encode(uuid.uuid4().int)[:8]
+    while True:
+        code = base62_encode(uuid.uuid4().int)[:8]
+        if code not in links:
+            return code
 
 
 # ========== 请求体模型（FastAPI 自动校验 JSON）==========
@@ -75,4 +78,4 @@ def redirect_to(code: str):
     if code not in links:
         raise HTTPException(status_code=404, detail="short code not found")
     clicks[code] += 1
-    return RedirectResponse(url=links[code], status_code=302)
+    return RedirectResponse(url=links[code], status_code=301)
