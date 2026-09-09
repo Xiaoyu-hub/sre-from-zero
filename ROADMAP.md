@@ -36,7 +36,7 @@
   - 用 in-memory dict 起步，后续可换 Redis
   - 健康检查端点：`GET /healthz`
 
-### Day 4 — 加 metrics 中间件 + Docker 多阶段构建
+### Day 4 — 加 metrics 中间件 + Docker 多阶段构建（√）
 - 任务：接入 prometheus-client，Dockerfile 多阶段构建
 - 产出：服务有 `/metrics` 端点，镜像 < 200MB
 - 关键指标：

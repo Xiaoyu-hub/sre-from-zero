@@ -13,7 +13,7 @@ WORKDIR /build
 # 先单独复制 requirements.txt 并安装依赖
 # 这样改代码不会触发依赖重装（利用 Docker 层缓存）
 COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # ---------- 阶段 2: runtime ----------
 FROM python:3.11-slim
