@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: prod-
+namespace: shortener-prod
+resources:
+  - ../../base
+patches:
+  - target:
+      kind: Deployment
+      name: shortener
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: shortener
+      spec:
+        replicas: 3
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: shortener
+    patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: shortener
+      spec:
+        minReplicas: 3
+        maxReplicas: 10
