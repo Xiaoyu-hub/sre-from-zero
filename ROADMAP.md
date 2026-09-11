@@ -60,7 +60,7 @@
   CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
   ```
 
-### Day 5 — K8s 部署清单 + kustomize
+### Day 5 — K8s 部署清单 + kustomize（√）
 - 任务：写 Deployment/Service/HPA + kustomize dev/prod 两套环境
 - 产出：`k8s/` 目录结构清晰
 - 目录建议：
