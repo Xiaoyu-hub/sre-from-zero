@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: shortener-slo
+  labels:
+    release: kps
+spec:
+  groups:
+    - name: shortener
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job="prod-shortener",status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{job="prod-shortener"}[5m])) > 0.01
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "短链服务错误率超过 1%"
+            description: "最近5分钟错误率已超过1% (99.9% SLO 红线)。"
+        - alert: HighP99Latency
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket{job="prod-shortener"}[5m])) by (le)
+            ) > 0.2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "短链服务 P99 延迟超过 200ms"
+            description: "最近5分钟P99超过200ms (延迟 SLO 红线)。"

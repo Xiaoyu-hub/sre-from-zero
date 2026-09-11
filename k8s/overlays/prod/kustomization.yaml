@@ -4,6 +4,7 @@ namePrefix: prod-
 namespace: shortener-prod
 resources:
   - ../../base
+  - alerts.yaml
 patches:
   - target:
       kind: Deployment
