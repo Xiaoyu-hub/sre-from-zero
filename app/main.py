@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel
 
-app = FastAPI(title="sre-from-zero", version="0.4.0")
+app = FastAPI(title="sre-from-zero", version="0.5.0")
 
 # ========== 内存存储（后续换 Redis）==========
 links: dict[str, str] = {}   # 短码 -> 长链接
@@ -134,10 +134,13 @@ def stats(code: str):
 
 # ========== 动态路由必须放在最后 ==========
 @app.get("/{code}")
-def redirect_to(code: str):
-    """查表 -> 点击+1 -> 302 跳转到原始链接（no-store 防止缓存吞计数）。"""
+def redirect_to(code: str, slow: int = 0):
+    """查表 -> 点击+1 -> 302 跳转到原始链接（no-store 防止缓存吞计数）。
+    slow=N: 故障演练注入点——模拟慢响应（Day 8 场景 B）。"""
     if code not in links:
         raise HTTPException(status_code=404, detail="short code not found")
+    if slow:
+        time.sleep(slow)
     clicks[code] += 1
     CLICKS.inc()
     return RedirectResponse(
