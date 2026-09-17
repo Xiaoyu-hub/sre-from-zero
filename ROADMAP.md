@@ -213,7 +213,59 @@
 
 ---
 
-## 二、简历怎么写
+## 二、DLC：BurnGate — SLO/Burn-Rate 决策引擎（Day 11-15）
+
+> 本项目的 DLC 扩展（不另立项目）：把告警从"静态阈值"升级为 **Error Budget 驱动的 burn rate 模型**，继续消费本项目的 Prometheus 指标与 Alertmanager 出口——"SLO 即代码"。
+> 定位：把 Google SRE Workbook 第 5 章 multi-window multi-burn-rate 理论变成可运行代码。
+
+### Day 11 — 数据接入 + SLO 配置
+- 任务：Prometheus HTTP API 客户端；设计 `slo.yaml` 配置 schema
+- 产出：能拉 `job="prod-shortener"` 真实指标；两条 SLO（可用性 99.9%、延迟 P99<200ms）
+- 关键点（slo.yaml 示意）：
+  ```yaml
+  slos:
+    - name: availability
+      type: status              # 基于状态码(status!~"5..")
+      query: http_requests_total
+      target: 0.999
+      alert_policy:
+        windows:
+          - {window: 5m, burn_rate: 14.4}
+          - {window: 1h, burn_rate: 14.4}
+    - name: latency
+      type: bucket              # 基于延迟桶(le="0.2")
+      query: http_request_duration_seconds
+      target_le: 0.2
+      target_ratio: 0.99
+  ```
+- 自检：窗口聚合值与 Grafana/Prometheus 实测一致
+
+### Day 12 — Burn-Rate 计算引擎（核心算法）
+- 任务：`burn rate = 实际错误率 / 允许错误率`；双窗口策略评估；**纯函数单测**
+- 产出：`burngate check` CLI，输出各 SLO 状态（ok/warn/critical）
+- 知识点：99.9% SLO → 月预算 ≈ 43 分钟；**1h 烧掉 2% 预算 → burn rate 14.4**（阈值数学推导要能手推）
+- 自检：快烧/慢烧/窗口边界/低流量保护四类场景断言通过
+
+### Day 13 — 告警出口
+- 任务：对接本项目 Alertmanager webhook
+- 产出：超阈值告警带 burn rate 数值 + 窗口信息（**短窗 5m 快触发降 MTTA，长窗 1h 确认防抖**）
+- 自检：复用故障注入（`?slow=2` / 造 5xx），burn rate 告警点燃且早于静态阈值
+
+### Day 14 — 报表 + 自监控
+- 任务：Error Budget burndown 图 + 余量报表（HTML）
+- 产出：`burngate report` 能回答"按当前烧速，预算还能撑多久"
+- 自检：引擎自身暴露 /metrics 且被 Prometheus 抓到（**自举监控**）
+
+### Day 15 — 门面
+- 任务：README 更新 + 博客 + 演示脚本
+- 产出：作为本项目的一部分发布（不另立项目、不另起简历条目）
+- 自检：clone → 一键跑通 `check` 和 `report`
+
+**技术栈**：Python + requests + YAML（与项目 1 同栈，最小依赖，算法透明经得起追问）。**刻意不用** Grafana/OSS 现成 SLO 工具——本项目目标是把理论"实现"而非"安装"。
+
+---
+
+## 三、简历怎么写
 
 ### 项目板块模板
 
@@ -230,6 +282,7 @@
   验证告警链路触发与恢复
 - 主导 1 次故障复盘，输出 Blameless Postmortem，落地 3 项 Action Items
 - 撰写技术博客《从零搭建一个生产级 SRE 实践平台》（X 字，平台阅读量 XXX）
+- 自研 SLO/Burn-Rate 告警引擎（项目 DLC）：YAML 声明式 SLO，双窗口 burn rate 告警 + Error Budget 余量报表，把告警从静态阈值升级为预算驱动（消费本项目指标与 Alertmanager 出口）
 ```
 
 ### 写法要点
@@ -255,7 +308,7 @@
 
 ---
 
-## 三、诚实回答清单（面试高频问题 + 诚实回答）
+## 四、诚实回答清单（面试高频问题 + 诚实回答）
 
 ### 问 1：这是真实项目吗？是公司项目还是个人项目？
 **诚实回答**：
@@ -285,7 +338,7 @@
 **诚实回答**：
 > 我给自己规划的成长路径是：
 > 1. 短期（1-2 个月）：学 Terraform + Helm 高级用法，把 IaC 补齐
-> 2. 中期（3-6 个月）：做第二个项目——SRE 工具集（值班机器人/告警聚合），把"造工具"能力补上
+> 2. 中期（3-6 个月）：在本项目 DLC 中实现 SLO/Burn-Rate 告警引擎（burngate，Day 11-15）——把 burn rate 理论代码化；之后再做 SRE 工具集（值班机器人/告警聚合），把"造工具"能力补上
 > 3. 长期：基于真实生产环境积累 SLO/事故响应经验，从"会用工具"进化到"能设计 SRE 体系"
 
 ### 问 6：SLO burn rate 告警为什么这么设阈值？什么原理？
@@ -295,6 +348,7 @@
 > - 短窗口快速触发（响应快），长窗口确认（避免抖动）
 > - 阈值依据 error budget burn rate：99.9% SLO 一个月 30 天 ≈ 43 分钟 downtime。如果 1 小时烧掉整月预算的 2%，就是 5% 错误率持续 1 小时
 > - 我项目里用了简化版（单窗口 2m/5m），完整的 multi-burn-rate 在 Postmortem 后续 Action Items 里
+> - 本项目的 DLC（Day 11-15 的 burngate 引擎）已把该思路实现为可运行代码：YAML 声明式 SLO + 双窗口（5m+1h）burn rate 告警 + Error Budget 余量报表——理论变成了作品，问到这里可以直接现场演示
 
 ### 问 7：Postmortem 为什么不追责到个人？Blameless 怎么理解？
 **诚实回答**：
@@ -321,3 +375,11 @@
 - [ ] 技术博客已发布（带链接）
 - [ ] 简历项目描述按"动词+技术+量化"格式写好
 - [ ] 面试诚实回答清单已练习（至少对自己讲 1 遍）
+
+**DLC（BurnGate）附加自检：**
+
+- [ ] 一键 `burngate check` 跑通（消费项目 1 真实指标，非 mock）
+- [ ] 核心算法单测覆盖（快烧/慢烧/窗口边界/低流量保护）
+- [ ] burn rate 告警对接 Alertmanager 并经故障注入演练验证（早于静态阈值触发）
+- [ ] burndown 报表 + 引擎自监控 /metrics 演示
+- [ ] 面试能手推 burn rate 数学（43 分钟 → 14.4）
