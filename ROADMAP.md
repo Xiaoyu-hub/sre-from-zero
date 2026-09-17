@@ -263,6 +263,62 @@
 
 **技术栈**：Python + requests + YAML（与项目 1 同栈，最小依赖，算法透明经得起追问）。**刻意不用** Grafana/OSS 现成 SLO 工具——本项目目标是把理论"实现"而非"安装"。
 
+### 🔭 DLC-2（计划）：CI/CD 流水线（Day 16-18）
+
+> P1：补最大简历短板（当前部署全手动）；JD 命中率最高的 SRE/DevOps 能力。
+
+- **Day 16 — Workflow 骨架 + 自托管 runner**：GitHub Actions 基础 workflow（push 触发 build+test）；自托管 runner 注册到本机
+- **Day 17 — 构建→推送→部署链路**：build 镜像 → 推本地 registry（或 image import）→ `kubectl apply -k` 到本地 k3d 集群
+- **Day 18 — 端到端验证 + 失败演练**：改一行代码 push → 集群自动上新版本（无任何手动命令）；build 失败自动阻断且集群不变
+- 自检：`git push` 后本地集群自动生效；失败时 workflow 变红、集群不被污染
+
+### 🔭 DLC-3（计划）：Redis + 配置管理整顿（Day 19-20）
+
+> P2：两个已知限制同时转正（内存存储 / 无配置管理）；Redis/ConfigMap/Secret/Ingress 全是 JD 高频词；且是 CI/CD 流水线真正要部署的对象。
+
+- **Day 19 — Redis 替换内存存储**：集群内起 Redis，短链表从 dict 迁走；服务配置抽进 ConfigMap
+- **Day 20 — Secret + Ingress**：密码入 Secret；Ingress 作为正式对外入口（替代 port-forward 临时方式）
+- 自检：pod 重启后短链数据不丢；改 ConfigMap 不用重发镜像；经 Ingress 域名访问
+
+### 🔭 DLC-4（计划）：Loki 日志接入（Day 21-22）
+
+> P3：可观测性三支柱只差"日志"（现在是 stdout 裸日志），面试必被问"日志怎么接"。
+
+- **Day 21 — 结构化日志 + 装 Loki**：应用日志改为 JSON stdout + 请求 ID 贯穿；helm 装 Loki
+- **Day 22 — 采集与关联**：Promtail/Grafana Agent 采集，Grafana Explore 检索短链日志并关联指标时间线
+- 自检：用日志完整还原一次故障时间线（如 404 风暴时段的日志量与指标互证）
+
+### 🔭 DLC-5（计划）：值班 / 告警聚合工具（Day 23-25）
+
+> 把"告警之后"的运维日常工程化；也为 DLC-6 混沌联动提供"谁接单"一环。
+
+- **Day 23 — 告警接入与聚合**：消费 Alertmanager webhook，告警去重/归并（应对告警风暴与告警疲劳）
+- **Day 24 — 值班轮转**：on-call schedule（YAML 声明式）、按当前值班人路由、ack 超时升级到第二层
+- **Day 25 — 通知出口 + 门面**：钉钉/飞书 webhook 通知 + 交接报告；README/博客/演练
+- 自检：模拟告警风暴 → 归并为 N 条事件单；未 ack 超时触发升级
+- 与 burngate 的衔接：**burngate 决定"何时该响"，本 DLC 决定"响给谁、响几条、谁接单"**
+
+### 🔭 DLC-6（计划）：轻量混沌平台（Game Day 自动化，Day 26-27）
+
+> P4：把 Day 8 手动演练升级为平台级能力；刻意不引 Litmus（学的是"造"，不是"装"）；需 burngate 告警 + 值班接收 + 日志佐证齐全后收益才最大化，故排最后。
+
+- **Day 26 — Game Day runner**：YAML 场景定义（杀 pod / 注入延迟）→ 自动执行 → 自动采集监控截图 + 告警时间戳
+- **Day 27 — 联动与门面**：与 burngate/值班/日志联动，一键跑完整演练并生成复盘入口
+- 自检：一条命令跑完整 game day，输出证据包（截图 + 告警时间戳 + 复盘链接）
+
+### DLC 全序与性价比排序（实现优先级）
+
+| 全序 | 天数 | DLC | 排位理由 |
+|------|------|-----|---------|
+| 1 | Day 11-15 | DLC-1 burngate（SLO/Burn-Rate 引擎）| 系列旗舰：把面试最难理论变成代码；告警升级哲学锚点；混沌联动前置 |
+| 2 | Day 16-18 | DLC-2 CI/CD（P1）| 补最大简历硬伤，演示杀伤力最强 |
+| 3 | Day 19-20 | DLC-3 Redis+配置（P2）| JD 高频词一次补齐，且是流水线要部署的对象 |
+| 4 | Day 21-22 | DLC-4 Loki（P3）| 成本最低，三支柱补全 |
+| 5 | Day 23-25 | DLC-5 值班/告警聚合 | 贴近运维日常，混沌联动的"谁接单"环节 |
+| 6 | Day 26-27 | DLC-6 混沌（P4）| 组合拳，依赖前五者齐全后收益最大化 |
+
+> 排序逻辑一句话：**旗舰锚点 → 简历硬伤 → 高频词 → 三支柱 → 运维日常 → 组合拳**。P1-P4 性价比表仍适用于 DLC-2/3/4/6 之间的相对顺序。
+
 ---
 
 ## 三、简历怎么写
